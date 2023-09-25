@@ -191,26 +191,28 @@ function populateOptions(selectName, array) {
 }
 
 function getSelectValues(select, currentCityId) {
-    var result = [];
-    var options = select && select.options;
-    var opt;
+    const result = [];
 
-    for (var i = 0, iLen = options.length; i < iLen; i++) {
-        opt = options[i];
+    if (select && select.options) {
+        for (let i = 0, iLen = select.options.length; i < iLen; i++) {
+            const opt = select.options[i];
 
-        if (opt.selected) {
-            const langId = opt.value;
-            const language = languages[langId];
-            if (language) {
-                result.push({
-                    languageId: parseInt(langId),
-                    languageName: language,
-                });
+            if (opt.selected) {
+                const langId = opt.value;
+                const language = languages[langId];
+
+                if (language) {
+                    result.push({
+                        languageId: parseInt(langId),
+                        languageName: language,
+                    });
+                }
             }
         }
     }
     return result;
 }
+
 
 
 
