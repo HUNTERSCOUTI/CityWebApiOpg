@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>City Web Api</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        /* * {
+            background-color: yellow;
+        } */
+        th, td {
+            text-align: center;
+            border: 1px solid black;
+            padding: 5px;
+        }
+        #table-wrapper {
+            position:relative;
+        }
+        #table-scroll {
+            height:350px;
+            overflow:auto;  
+            margin-top:20px;
+        }
+        #table-wrapper table {
+            width:80%;
+        }
+        #table-wrapper table * {
+            color:black;
+        }   
+        #table-wrapper table thead th .text {
+            position:absolute;   
+            top:-20px;
+            z-index:2;
+            height:80px;
+            width:35%;
+            border:1px solid red;
+        }
+    </style>
+</head>
+<body>
+    <h1>City Web Api</h1>
+    <br/>
+    <form action="javascript:void(0);" method="POST" onsubmit="addItem()">
+        <h2>Add New City</h2>
+        <select id="add-coid"></select>
+        <input type="text" id="add-name" placeholder="City Name">
+        <input type="text" id="add-desc" placeholder="Description">
+        <select id="add-lang" multiple></select>
+        <br><br><input type="submit" value="Add">
+    </form>
+    <br/><br/><br/>
+    <p id="counter"></p>
+    <div id="table-wrapper">
+        <div id="table-scroll">
+            <table style="border-collapse: collapse;">
+                <tr>
+                    <th>Country Name</th>
+                    <th>City Names</th>
+                    <th>Description</th>
+                    <th>Languages</th>
+                </tr>
+                <tbody id="display"></tbody>
+            </table>
+        </div>
+    </div>
+    <br/><br/><br/>
+    <div id="editForm">
+        <h3>Edit</h3>
+        <form action="javascript:void(0);" onsubmit="updateItem()">
+            <input type="hidden" id="edit-id">
+            <select id="edit-coid"></select>
+            <input type="text" id="edit-name">
+            <input type="text" id="edit-desc">
+            <select id="edit-lang" multiple></select>
+            <input type="submit" value="Save">
+        </form>
+    </div>
+</body>
+</html>
+
+<script src="CityWebApi.js" asp-append-version="true"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        getData();
+        closeInput();
+    });
+</script>
