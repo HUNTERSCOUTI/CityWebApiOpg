@@ -60,13 +60,12 @@ function addItem() {
     const addNameTextbox = document.getElementById('add-name');
     const addDescTextbox = document.getElementById('add-desc');
     const addCountryIDTextbox = document.getElementById('add-coid');
-    const addLangTextbox = document.getElementById('add-lang');
+    const addLangTextbox = getSelectValues(document.getElementById('add-lang'));
 
-    const data = {
+    let data = {
         name: addNameTextbox.value.trim(),
         description: addDescTextbox.value.trim(),
-        countryID: addCountryIDTextbox.value.trim(),
-        cityLanguages: addLangTextbox.value.split(',').map(lang => lang.trim()),
+        countryID: addCountryIDTextbox.value.trim()
     };
 
     fetch(apiBaseUrl + apiEndpoints.city + userName, {
@@ -83,6 +82,25 @@ function addItem() {
             addNameTextbox.value = '';
             addCountryIDTextbox.value = '';
             addDescTextbox.value = '';
+        })
+        .then(() => {
+            if(addLangTextbox.length > 0){ /////////////////////// FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+                const matchingCity = cities.find(city => city.name == data.name && city.description == data.description && city.countryID == data.countryID);
+                data = {
+                    cityId: matchingCity.cityId,
+                    cityLanguages: addLangTextbox,
+                }
+                fetch(apiBaseUrl + apiEndpoints.cityLanguage + userName, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data),
+                })
+                .then(response => response.json());
+                getData();
+            }
         })
         .catch(error => console.error('Unable to add item.', error));
 }
