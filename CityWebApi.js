@@ -1,11 +1,11 @@
 const apiBaseUrl = "https://cityinfo.buchwaldshave34.dk/api/";
 const apiEndpoints = {
-  city: "City",
-  country: "Country",
-  cityLanguage: "CityLanguage",
-  language: "Language"
+    city: "City",
+    country: "Country",
+    cityLanguage: "CityLanguage",
+    language: "Language"
 };
-const userName = "?UserName=UserZilas"; 
+const userName = "?UserName=UserZilas";
 
 let cities = [];
 let countries = {};
@@ -14,7 +14,7 @@ let cityLanguages = [];
 
 function fetchData(endpoint) {
     return fetch(apiBaseUrl + endpoint + userName)
-      .then(response => response.json());
+        .then(response => response.json());
 }
 
 function getData() {
@@ -26,37 +26,37 @@ function getData() {
         fetchData(apiEndpoints.cityLanguage),
         fetchData(apiEndpoints.language)
     ])
-    .then(([cityData, countryData, cityLanguageData, languageData]) => {
-        // City 
-        cities = cityData;
+        .then(([cityData, countryData, cityLanguageData, languageData]) => {
+            // City 
+            cities = cityData;
 
-        // Country 
-        countries = {};
-        countryData.forEach(country => {
-            countries[country.countryID] = country.countryName;
+            // Country 
+            countries = {};
+            countryData.forEach(country => {
+                countries[country.countryID] = country.countryName;
+            });
+            document.getElementById('add-coid').innerHTML = '';
+            populateOptions("add-coid", countries);
+
+            // CityLanguage
+            cityLanguages = cityLanguageData;
+
+            // Languages
+            languages = {};
+            languageData.forEach(language => {
+                languages[language.languageId] = language.languageName;
+            });
+            document.getElementById('add-lang').innerHTML = '';
+            populateOptions("add-lang", languages);
+
+            displayItems(cities);
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
         });
-        document.getElementById('add-coid').innerHTML = '';
-        populateOptions("add-coid", countries);
-
-        // CityLanguage
-        cityLanguages = cityLanguageData;
-
-        // Languages
-        languages = {};
-        languageData.forEach(language => {
-            languages[language.languageId] = language.languageName;
-        });
-        document.getElementById('add-lang').innerHTML = '';
-        populateOptions("add-lang", languages);
-        
-        displayItems(cities);
-    })
-    .catch(error => {
-        console.error('Error fetching data:', error);
-    });
 }
 
-function addItem() {
+async function addItem() {
     const addNameTextbox = document.getElementById('add-name');
     const addDescTextbox = document.getElementById('add-desc');
     const addCountryIDTextbox = document.getElementById('add-coid');
@@ -67,7 +67,7 @@ function addItem() {
         description: addDescTextbox.value.trim(),
         countryID: addCountryIDTextbox.value.trim()
     };
-
+    
     fetch(apiBaseUrl + apiEndpoints.city + userName, {
         method: 'POST',
         headers: {
@@ -76,43 +76,42 @@ function addItem() {
         },
         body: JSON.stringify(data),
     })
-        .then(response => response.json())
-        .then(() => {
-            getData();
-            addNameTextbox.value = '';
-            addCountryIDTextbox.value = '';
-            addDescTextbox.value = '';
-        })
-        .then(() => {
-            if(addLangTextbox.length > 0){ /////////////////////// FIXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-                const matchingCity = cities.find(city => city.name == data.name && city.description == data.description && city.countryID == data.countryID);
-                data = {
-                    cityId: matchingCity.cityId,
-                    cityLanguages: addLangTextbox,
-                }
-                fetch(apiBaseUrl + apiEndpoints.cityLanguage + userName, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data),
-                })
-                .then(response => response.json());
-                getData();
+    .then(async response => {
+            var cityID = await response.json()
+        for (var i = 0; i < addLangTextbox.length; i++) {
+            const langItem = {
+                cityId: cityID,
+                languageId: addLangTextbox[i]
             }
-        })
-        .catch(error => console.error('Unable to add item.', error));
+    
+            await fetch(`${apiBaseUrl + apiEndpoints.cityLanguage}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(langItem)
+            })
+        }
+    })
+    .then(() => {
+        getData();
+        addNameTextbox.value = '';
+        addCountryIDTextbox.value = '';
+        addDescTextbox.value = '';
+    })
+    .catch(error => console.error('Unable to add item.', error));
 }
 
 function updateItem() {
     const itemId = document.getElementById('edit-id').value;
+    var languagesAdded = getSelectValues(document.getElementById('edit-lang'));
+
     const item = {
         name: document.getElementById('edit-name').value.trim(),
         description: document.getElementById('edit-desc').value.trim(),
         countryID: document.getElementById('edit-coid').value.trim(),
         cityId: itemId,
-        cityLanguages: getSelectValues(document.getElementById('edit-lang'), itemId),
     };
 
     fetch(`${apiBaseUrl + apiEndpoints.city}/${itemId}` + userName, {
@@ -123,11 +122,41 @@ function updateItem() {
         },
         body: JSON.stringify(item)
     })
-        .then(() => getData())
-        .catch(error => console.error('Unable to update item.', error));
+    .then(async () => {
+        var city = cities.find(city => city.cityId == itemId)
 
+        for (var i = 0; i < city.cityLanguages.length; i++) {
+            var language = city.cityLanguages[i];
+            if (!languagesAdded.includes(language.languageId)) {
+                await fetch(`${apiBaseUrl + apiEndpoints.cityLanguage}/${itemId}%2C%20${language.languageId}?CityId=${itemId}&LanguageId=${language.languageId}`, {
+                    method: 'DELETE',
+                })
+            }
+            else {
+                var indexToRemove = languagesAdded.findIndex(langId => langId == language.languageId)
+                languagesAdded.splice(indexToRemove, 1)
+            }
+        }
+
+        for (var i = 0; i < languagesAdded.length; i++) {
+            const langItem = {
+                cityId: itemId,
+                languageId: languagesAdded[i]
+            }
+
+            await fetch(`${apiBaseUrl + apiEndpoints.cityLanguage}`, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(langItem)
+            })
+        }
+    })
+    .then(() => getData())
+    .catch(error => console.error('Unable to update item.', error));
     closeInput();
-
     return false;
 }
 
@@ -208,7 +237,7 @@ function populateOptions(selectName, array) {
     }
 }
 
-function getSelectValues(select, currentCityId) {
+function getSelectValues(select) {
     const result = [];
 
     if (select && select.options) {
@@ -216,15 +245,9 @@ function getSelectValues(select, currentCityId) {
             const opt = select.options[i];
 
             if (opt.selected) {
-                const langId = opt.value;
-                const language = languages[langId];
-
-                if (language) {
-                    result.push({
-                        languageId: parseInt(langId),
-                        languageName: language,
-                    });
-                }
+                result.push(
+                    parseInt(opt.value)
+                );
             }
         }
     }
@@ -244,8 +267,8 @@ function displayCount(itemCount) {
     document.getElementById('counter').innerText = `${itemCount} ${name}`;
 }
 
-function addCountryLanguage(){
-    
+function addCountryLanguage() {
+
 }
 
 function countryIDToName(ID) {
