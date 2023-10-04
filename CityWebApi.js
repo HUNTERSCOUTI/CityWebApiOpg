@@ -68,7 +68,7 @@ async function addItem() {
         countryID: addCountryIDTextbox.value.trim()
     };
     
-    fetch(apiBaseUrl + apiEndpoints.city + userName, {
+    await fetch(apiBaseUrl + apiEndpoints.city + userName, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
@@ -103,10 +103,10 @@ async function addItem() {
     .catch(error => console.error('Unable to add item.', error));
 }
 
-function updateItem() {
+async function updateItem() {
     const itemId = document.getElementById('edit-id').value;
     var languagesAdded = getSelectValues(document.getElementById('edit-lang'));
-
+    
     const item = {
         name: document.getElementById('edit-name').value.trim(),
         description: document.getElementById('edit-desc').value.trim(),
@@ -114,7 +114,7 @@ function updateItem() {
         cityId: itemId,
     };
 
-    fetch(`${apiBaseUrl + apiEndpoints.city}/${itemId}` + userName, {
+    await fetch(`${apiBaseUrl + apiEndpoints.city}/${itemId}` + userName, {
         method: 'PUT',
         headers: {
             'Accept': 'application/json',
@@ -157,7 +157,6 @@ function updateItem() {
     .then(() => getData())
     .catch(error => console.error('Unable to update item.', error));
     closeInput();
-    return false;
 }
 
 function displayEditForm(id) {
@@ -185,8 +184,8 @@ function displayEditForm(id) {
     document.getElementById('editForm').style.display = 'block';
 }
 
-function deleteItem(id) {
-    fetch(`${apiBaseUrl + apiEndpoints.city}/${id}` + userName, {
+async function deleteItem(id) {
+    await fetch(`${apiBaseUrl + apiEndpoints.city}/${id}` + userName, {
         method: 'DELETE'
     })
         .then(() => getData())
